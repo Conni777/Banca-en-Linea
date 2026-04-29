@@ -50,9 +50,7 @@ const Register = () => {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      console.log("ERROR DETALLADO:", err.response || err);
-      // Extraer mensaje específico del servidor para la rúbrica
-      const serverMsg = err.response?.data?.error || err.message || 'Error de conexión con el nodo';
+      const serverMsg = err.response?.data?.error || err.message || 'Error de conexión';
       setError(`FALLO DE SISTEMA: ${serverMsg}`);
     } finally {
       setLoading(false);

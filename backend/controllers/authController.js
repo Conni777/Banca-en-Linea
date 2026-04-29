@@ -2,7 +2,7 @@ const supabase = require('../config/supabaseClient');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// register: Recibe email, password y nombre. Debe encriptar el password con bcryptjs y hacer un INSERT en la tabla usuarios.
+
 exports.register = async (req, res) => {
   try {
     const { email, password, nombre } = req.body;
@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// login: Recibe email y password. Debe buscar al usuario en Supabase, comparar el password encriptado con bcryptjs y, si es correcto, devolver un token JWT firmado con jsonwebtoken.
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
