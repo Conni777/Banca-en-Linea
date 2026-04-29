@@ -265,3 +265,146 @@ input:focus-visible, button:focus-visible, a:focus-visible {
     transform: none;
   }
 }
+
+/* Nuevos Estilos para el Módulo de Transferencias */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.transfer-section {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+}
+
+.transfer-form {
+  padding: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.input-group input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(57, 255, 20, 0.2);
+  padding: 0.8rem;
+  color: #fff;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+  border-color: var(--neon-green);
+  outline: none;
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.1);
+}
+
+.transfer-btn {
+  background: transparent;
+  border: 1px solid var(--neon-green);
+  color: var(--neon-green);
+  padding: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s;
+  margin-top: 1rem;
+}
+
+.transfer-btn:hover:not(:disabled) {
+  background: var(--neon-green);
+  color: #000;
+  box-shadow: 0 0 20px var(--neon-green);
+}
+
+.transfer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--text-dim);
+  color: var(--text-dim);
+}
+
+.transfer-msg {
+  padding: 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+}
+
+.transfer-msg.success {
+  background: rgba(57, 255, 20, 0.1);
+  color: var(--neon-green);
+  border-color: rgba(57, 255, 20, 0.3);
+}
+
+.transfer-msg.error {
+  background: rgba(255, 0, 60, 0.1);
+  color: var(--neon-red);
+  border-color: rgba(255, 0, 60, 0.3);
+}
+
+.empty-tx {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* Loading state */
+.loading-container {
+  height: 100vh;
+  background: var(--bg-black);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--neon-green);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.scanner-line {
+  width: 200px;
+  height: 2px;
+  background: var(--neon-green);
+  box-shadow: 0 0 15px var(--neon-green);
+  margin-bottom: 1rem;
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0%, 100% { transform: translateY(-10px); opacity: 0; }
+  50% { transform: translateY(10px); opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

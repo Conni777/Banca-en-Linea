@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, ArrowUpRight, ArrowDownLeft, User } from 'lucide-react';
+import { LogOut, LayoutDashboard, ArrowUpRight, ArrowDownLeft, User, Send, CheckCircle, AlertTriangle } from 'lucide-react';
+import api from '../api';
 import './Dashboard.css';
 
 const CosmicCancerLogo = ({ size = 200, className = "" }) => (
@@ -18,26 +19,84 @@ const CosmicCancerLogo = ({ size = 200, className = "" }) => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+  
+  const [userData, setUserData] = useState(null);
+  const [transacciones, setTransacciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Estado para el formulario de transferencia
+  const [destino, setDestino] = useState('');
+  const [monto, setMonto] = useState('');
+  const [transferMessage, setTransferMessage] = useState({ text: '', type: '' });
+  const [isTransferring, setIsTransferring] = useState(false);
 
   useEffect(() => {
     if (!token) {
       navigate('/login');
+      return;
     }
+    fetchData();
   }, [token, navigate]);
+
+  const fetchData = async () => {
+    try {
+      const [userRes, txRes] = await Promise.all([
+        api.get('/auth/me'),
+        api.get('/transacciones')
+      ]);
+      setUserData(userRes.data);
+      setTransacciones(txRes.data);
+    } catch (err) {
+      console.error('Error al cargar datos:', err);
+      if (err.response?.status === 401) {
+        handleLogout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
-  const transaccionesPrueba = [
-    { id: 1, tipo: 'Abono', monto: 50000, fecha: '2026-04-28', descripcion: 'Depósito Inicial' },
-    { id: 2, tipo: 'Transferencia', monto: -15000, fecha: '2026-04-28', descripcion: 'Pago de Servicios' },
-    { id: 3, tipo: 'Abono', monto: 12000, fecha: '2026-04-27', descripcion: 'Reembolso' },
-    { id: 4, tipo: 'Transferencia', monto: -5000, fecha: '2026-04-26', descripcion: 'Cafetería' },
-  ];
+  const handleTransfer = async (e) => {
+    e.preventDefault();
+    setTransferMessage({ text: '', type: '' });
+    setIsTransferring(true);
 
-  if (!token) return null;
+    try {
+      const response = await api.post('/transacciones/transferir', {
+        usuario_id_origen: userData.id,
+        usuario_id_destino: destino,
+        monto: Number(monto)
+      });
+
+      setTransferMessage({ 
+        text: 'TRANSFERENCIA EXITOSA: Fondos desplazados correctamente.', 
+        type: 'success' 
+      });
+      setDestino('');
+      setMonto('');
+      // Recargar datos para ver el nuevo saldo y transacción
+      fetchData();
+    } catch (err) {
+      setTransferMessage({ 
+        text: `ERROR EN TRANSFERENCIA: ${err.response?.data?.error || 'Fallo de conexión.'}`, 
+        type: 'error' 
+      });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
+  if (!token || loading) return (
+    <div className="loading-container">
+      <div className="scanner-line"></div>
+      <p>ACCEDIENDO AL NODO...</p>
+    </div>
+  );
 
   return (
     <div className="dashboard-container">
@@ -61,37 +120,85 @@ const Dashboard = () => {
               <User size={32} />
             </div>
             <div>
-              <h1>Bienvenido, Agente</h1>
+              <h1>Bienvenido, {userData?.nombre || 'Agente'}</h1>
               <p>Estado de la cuenta: <span className="neon-green">ACTIVO</span></p>
             </div>
           </section>
           <section className="balance-card" role="region" aria-label="Información de saldo">
             <span className="label">SALDO DISPONIBLE</span>
-            <h2 className="amount">$ 42.000,00</h2>
+            <h2 className="amount">
+              {userData?.saldo?.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}
+            </h2>
           </section>
         </header>
 
-        <section className="transactions-section">
-          <header className="section-header">
-            <h3>Últimos Movimientos</h3>
-          </header>
-          <div className="transactions-list" role="list">
-            {transaccionesPrueba.map((tx) => (
-              <article key={tx.id} className="transaction-item" role="listitem">
-                <div className={`tx-icon ${tx.monto > 0 ? 'bg-green' : 'bg-red'}`} aria-hidden="true">
-                  {tx.monto > 0 ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
+        <div className="dashboard-grid">
+          {/* Módulo de Transferencias */}
+          <section className="transfer-section">
+            <header className="section-header">
+              <h3>Transferencias de Fondos</h3>
+            </header>
+            <form onSubmit={handleTransfer} className="transfer-form">
+              <div className="input-group">
+                <label>CUENTA DESTINO (ID)</label>
+                <input 
+                  type="text" 
+                  placeholder="ID DE USUARIO DESTINO" 
+                  value={destino}
+                  onChange={(e) => setDestino(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label>MONTO A TRANSFERIR</label>
+                <input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={monto}
+                  onChange={(e) => setMonto(e.target.value)}
+                  required
+                />
+              </div>
+              
+              {transferMessage.text && (
+                <div className={`transfer-msg ${transferMessage.type}`}>
+                  {transferMessage.type === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+                  <span>{transferMessage.text}</span>
                 </div>
-                <div className="tx-info">
-                  <p className="tx-desc">{tx.descripcion}</p>
-                  <time className="tx-date" dateTime={tx.fecha}>{tx.fecha}</time>
-                </div>
-                <div className={`tx-amount ${tx.monto > 0 ? 'neon-green' : 'neon-red'}`} aria-label={`${tx.monto > 0 ? 'Abono de' : 'Cargo de'} ${tx.monto} pesos`}>
-                  {tx.monto > 0 ? '+' : ''}{tx.monto.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+              )}
+
+              <button type="submit" className="transfer-btn" disabled={isTransferring}>
+                {isTransferring ? 'PROCESANDO...' : 'CONFIRMAR TRANSFERENCIA'}
+                {!isTransferring && <Send size={18} />}
+              </button>
+            </form>
+          </section>
+
+          {/* Últimos Movimientos */}
+          <section className="transactions-section">
+            <header className="section-header">
+              <h3>Últimos Movimientos</h3>
+            </header>
+            <div className="transactions-list" role="list">
+              {transacciones.length > 0 ? transacciones.map((tx) => (
+                <article key={tx.id} className="transaction-item" role="listitem">
+                  <div className={`tx-icon ${tx.monto > 0 && tx.tipo === 'Abono' ? 'bg-green' : 'bg-red'}`} aria-hidden="true">
+                    {(tx.monto > 0 && tx.tipo === 'Abono') ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
+                  </div>
+                  <div className="tx-info">
+                    <p className="tx-desc">{tx.tipo} {tx.cuenta_destino ? `a ID: ${tx.cuenta_destino}` : ''}</p>
+                    <time className="tx-date" dateTime={tx.fecha}>{new Date(tx.fecha).toLocaleDateString()}</time>
+                  </div>
+                  <div className={`tx-amount ${tx.monto > 0 && tx.tipo === 'Abono' ? 'neon-green' : 'neon-red'}`}>
+                    {(tx.monto > 0 && tx.tipo === 'Abono') ? '+' : '-'}{Math.abs(tx.monto).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}
+                  </div>
+                </article>
+              )) : (
+                <div className="empty-tx">No hay movimientos registrados.</div>
+              )}
+            </div>
+          </section>
+        </div>
       </main>
     </div>
   );

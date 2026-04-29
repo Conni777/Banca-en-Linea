@@ -217,3 +217,21 @@ exports.transferirInterbancario = async (req, res) => {
   }
 };
 
+exports.getTransacciones = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('transacciones')
+      .select('*')
+      .eq('usuario_id', req.usuario.id)
+      .order('fecha', { ascending: false });
+
+    if (error) {
+      return res.status(500).json({ error: 'Error al obtener transacciones' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+

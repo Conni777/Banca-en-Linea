@@ -80,3 +80,21 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
+exports.getMe = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, email, nombre, saldo')
+      .eq('id', req.usuario.id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};

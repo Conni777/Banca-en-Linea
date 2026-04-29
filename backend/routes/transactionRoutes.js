@@ -6,6 +6,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/abonar', authMiddleware, transactionController.abonar);
 router.post('/transferir', authMiddleware, transactionController.transferir);
 router.post('/transferir-interbancario', authMiddleware, transactionController.transferirInterbancario);
-
+router.get('/', authMiddleware, transactionController.getTransacciones);
 
 module.exports = router;
